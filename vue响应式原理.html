@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="./node_modules/vue/dist/vue.js"></script>
+  <title>Document</title>
+</head>
+
+<body>
+  <!-- 
+    1. 通过app.message修改数据, Vue内部是如何监听message数据的改变 
+    * Object.defineProperty -> 监听对象属性的改变
+    2. 当数据发生改变,Vue是如何知道要通知哪些人,界面发生刷新
+    * 发布订阅者模式
+  -->
+
+  <div id="app">
+    {{message}}
+    <!-- 张三 -->
+    {{message}}
+    <!-- 李四 -->
+    {{message}}
+    <!-- 王五 -->
+    {{name}}
+  </div>
+
+  <script>
+    const app = new Vue({
+      el: "#app",
+      data: {
+        message: '哈哈哈',
+        name: 'why'
+      }
+    })
+
+    // 响应式原理实现流程
+    // 1.先将Vue中的data对象提出来
+    const obj = {
+      message: '哈哈哈',
+      name: 'why'
+    }
+
+    // 2.再把对象中的keys遍历出来,拿到对象里面的每一个key
+    Object.keys(obj).forEach(key => {
+        let value = obj[key]
+          // 该如何监听改变? 给原来的obj对象重新定义一个key
+        Object.defineProperty(obj, key, {
+          set(newValue) {
+            console.log('监听' + key + '改变')
+              // 谁用了这个属性,就告诉谁,想要知道谁用了,就得去解析html
+              // 根据解析html代码,获取到哪些人有用属性
+              // 张三/李四/王五
+            value = newValue
+
+            // ↓当属性发生改变时,通知一下那些人
+            // dep.notify()
+          },
+          get() {
+            // console.log('获取' + key + '对应的值')
+            // 张三: get -通知修改数据后-> update
+            // 李四: get -通知修改数据后-> update
+            // 王五: get -通知修改数据后-> update
+            return value
+          }
+        })
+      })
+      // ↓当执行这行代码重新给name赋值时,就会进到上面的set方法里
+      // obj.name = 'kobe';
+
+    // 发布者订阅模式
+    // 发布者
+    class Dep {
+      constructor() {
+        this.subs = [] //用来记录谁要订阅我这个属性的数组
+      }
+
+      addSub(watcher) {
+        this.subs.push(watcher)
+      }
+
+      notify() {
+        this.subs.forEach(item => {
+          item.update()
+        })
+      }
+    }
+
+    // 订阅者
+    class Watcher {
+      constructor(name) {
+        this.name = name;
+      }
+
+      update() {
+        console.log(this.name + '发生update');
+      }
+    }
+
+    const dep = new Dep()
+
+    // 当大家要被获取的时候
+    const w1 = new Watcher('张三');
+    dep.addSub(w1)
+
+    const w2 = new Watcher('李四');
+    dep.addSub(w2)
+
+    const w3 = new Watcher('王五');
+    dep.addSub(w3)
+
+    dep.notify()
+  </script>
+</body>
+
+</html>
