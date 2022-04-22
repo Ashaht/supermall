@@ -78,14 +78,13 @@ export default {
     // 2.根据iid请求详情数据
     getDetail(this.iid).then(res => {
       // 获取数据
-      //console.log(res);
+      // console.log(res);
       const data = res.result;
       // 1.获取顶部的图片轮播数据
       this.topImages = data.itemInfo.topImages
 
       // 2.创建商品信息对象
       this.goods = new Goods(data.itemInfo, data.columns, data.shopInfo.services)
-
       // 3.创建店铺信息对象
       this.shop = new Shop(data.shopInfo)
 
